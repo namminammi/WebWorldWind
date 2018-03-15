@@ -152,6 +152,7 @@ define([ // PLEASE KEEP ALL THIS IN ALPHABETICAL ORDER BY MODULE NAME (not direc
         './error/NotYetImplementedError',
         './util/Offset',
         './layer/OpenStreetMapImageLayer',
+        './layer/UsfsTopoLayer',
         './formats/kml/util/Pair',
         './gesture/PanRecognizer',
         './shapes/Path',
@@ -393,6 +394,7 @@ define([ // PLEASE KEEP ALL THIS IN ALPHABETICAL ORDER BY MODULE NAME (not direc
               NotYetImplementedError,
               Offset,
               OpenStreetMapImageLayer,
+              UsfsTopoLayer,
               Pair,
               PanRecognizer,
               Path,
@@ -807,6 +809,7 @@ define([ // PLEASE KEEP ALL THIS IN ALPHABETICAL ORDER BY MODULE NAME (not direc
         WorldWind['NotYetImplementedError'] = NotYetImplementedError;
         WorldWind['Offset'] = Offset;
         WorldWind['OpenStreetMapImageLayer'] = OpenStreetMapImageLayer;
+        WorldWind['UsfsTopoLayer'] = UsfsTopoLayer;
         WorldWind['PanRecognizer'] = PanRecognizer;
         WorldWind['Path'] = Path;
         WorldWind['PeriodicTimeSequence'] = PeriodicTimeSequence;

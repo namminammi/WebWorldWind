@@ -566,6 +566,10 @@ define([
                 dc.surfaceTileRenderer.renderTiles(dc, this.currentTiles, this.opacity);
                 dc.frameStatistics.incrementImageTileCount(this.currentTiles.length);
                 this.inCurrentFrame = true;
+//                
+//                for (var i = 0; i < this.currentTiles.length; i++) {
+//                    this.currentTiles[i].extent.render(dc);
+//                }
             }
         };
 
@@ -592,9 +596,9 @@ define([
                 var tile = this.topLevelTiles[i];
 
                 tile.update(dc);
-
+                tile.extent.render(dc);
                 this.currentAncestorTile = null;
-
+                
                 if (this.isTileVisible(dc, tile)) {
                     this.addTileOrDescendants(dc, tile);
                 }
@@ -643,7 +647,8 @@ define([
 
         WmtsLayer.prototype.addTile = function (dc, tile) {
             tile.fallbackTile = null;
-
+                tile.extent.render(dc);
+            
             var texture = dc.gpuResourceCache.resourceForKey(tile.imagePath);
             if (texture) {
                 this.currentTiles.push(tile);

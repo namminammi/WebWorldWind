@@ -356,6 +356,7 @@ define([
                 var tile = this.topLevelTiles[i];
 
                 tile.update(dc);
+                tile.extent.render(dc);
 
                 this.currentAncestorTile = null;
 
@@ -402,7 +403,7 @@ define([
         // Intentionally not documented.
         TiledImageLayer.prototype.addTile = function (dc, tile) {
             tile.fallbackTile = null;
-
+           // tile.extent.render(dc);
             var texture = dc.gpuResourceCache.resourceForKey(tile.imagePath);
             if (texture) {
                 tile.opacity = 1;
