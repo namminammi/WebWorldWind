@@ -40,30 +40,38 @@ requirejs(['./WorldWindShim',
             wwd.addLayer(layers[l].layer);
         }
 
-        // Create screen credits overlay via browser's DOM
-        var canvasParentNode = wwd.canvas.parentNode;
-        //canvasParentNode.style.position = "relative"; // Concern: this changes the styling of an application element.
+        // Create screen credits overlay via browser's DOM.
 
-        // Create div that will contain screen credits and set its styling and contents
+        // Create div that will contain screen credits.
         var creditsOverlay = document.createElement("div");
 
         // Set overlay CSS styling
         creditsOverlay.style.position = "absolute";
-        creditsOverlay.style.right = "20px"; // Warning: These coordinates use as reference the border of the
-        creditsOverlay.style.bottom = "30px";// Canvas container, NOT the canvas itself (i.e. they're application dependant).
+        creditsOverlay.style.right = "2.7%";
+        creditsOverlay.style.bottom = "4%";
         creditsOverlay.style.color = "LightGray";
         creditsOverlay.style.textAlign = "right";
         creditsOverlay.style.opacity = "0.75";
 
-        creditsOverlay.innerHTML = "<p>I'm a DOM text string</br>and I contain many lines</br>WebUI haiku</p>";
-        creditsOverlay.innerHTML += "<p><a href=\"http://www.maps.bing.com\" target=\"_blank\">I'm a DOM link</a></p>";
-        creditsOverlay.innerHTML +=
-            "<p><a href=\"http://www.maps.bing.com\" target=\"_blank\">" +
-                "<img src=\"../images/powered-by-bing.png\" alt=\"Link to Bing maps\">\n" +
-            "</a></p>";
+        // Add text credits.
+        creditsOverlay.innerHTML =
+            "<p>I'm a DOM text string</br>and I contain many lines</br>Web UI haiku.</p>" +
+            "<p>" +
+                "<a href=\"http://www.maps.bing.com\" target=\"_blank\">I'm a DOM hyperlink</a>" +
+            "</p>"
+        ;
 
-        // Append overlay as sibling of canvas element (this makes our DOM credits application dependant).
-        canvasParentNode.appendChild(creditsOverlay);
+        // Add image credit.
+        creditsOverlay.innerHTML +=
+            "<p>" +
+                "<a href=\"http://www.maps.bing.com\" target=\"_blank\">" +
+                    "<img src=\"../images/powered-by-bing.png\" alt=\"Link to Bing maps\">\n" +
+                "</a>" +
+            "</p>"
+        ;
+
+        // Append overlay as sibling of canvas element.
+        wwd.canvas.parentNode.appendChild(creditsOverlay);
 
         // Create a layer manager for controlling layer visibility.
         var layerManager = new LayerManager(wwd);
