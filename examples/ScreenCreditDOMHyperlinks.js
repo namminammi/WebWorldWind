@@ -40,28 +40,34 @@ requirejs(['./WorldWindShim',
             wwd.addLayer(layers[l].layer);
         }
 
+        // Create a layer manager for controlling layer visibility.
+        var layerManager = new LayerManager(wwd);
+
         // Create screen credits overlay via browser's DOM.
 
         // Create new parent node that will serve as the container of both the canvas and the overlay div.
         var container = document.createElement("div");
-        // Attempting to make the new container layout identical to the WorldWindow canvas:
+
+        // Attempting to make the new container layout identical to the WorldWindow canvas, with the intention
+        // of avoiding disruption of the application's HTML layout, whatever it may be.
         container.style.height = wwd.canvas.style.height;
         container.style.width = wwd.canvas.style.width;
-        // Setting container's position as required for the overlay
+
+        // Setting container's position as required for the overlay.
         container.style.position = "relative";
 
         // Create div that will contain screen credits.
         var creditsOverlay = document.createElement("div");
 
-        // Set overlay CSS styling
-        creditsOverlay.style.position = "absolute";
+        // Set overlay CSS styling in order to (mostly) imitate current screen credits implementation.
+        creditsOverlay.style.position = "absolute"; // Required for the overlay to be positioned over the container.
         creditsOverlay.style.right = "5px";
         creditsOverlay.style.bottom = "3%";
         creditsOverlay.style.color = "DimGray";
         creditsOverlay.style.textAlign = "right";
         creditsOverlay.style.opacity = "0.75";
 
-        // Add text credits.
+        // Add text credit and hyperlink.
         creditsOverlay.innerHTML =
             "<p>I'm a DOM text string</br>and I contain many lines</br>Web UI haiku.</p>" +
             "<p>" +
@@ -69,7 +75,7 @@ requirejs(['./WorldWindShim',
             "</p>"
         ;
 
-        // Add image credit.
+        // Add image credit that also functions as hyperlink.
         creditsOverlay.innerHTML +=
             "<p>" +
                 "<a href=\"http://www.maps.bing.com\" target=\"_blank\">" +
@@ -78,13 +84,11 @@ requirejs(['./WorldWindShim',
             "</p>"
         ;
 
-        // Replace application-defined canvas parent node with our new container
+        // Replace application-defined canvas parent node with our new container, hopefully without messing
+        // with the application's layout.
         wwd.canvas.parentNode.replaceChild(container, wwd.canvas);
-        // Set WorldWindow canvas as child of our container
-        container.appendChild(wwd.canvas);
-        // Set credits overlay as sibling of the WorldWindow canvas
-        container.appendChild(creditsOverlay);
 
-        // Create a layer manager for controlling layer visibility.
-        var layerManager = new LayerManager(wwd);
+        // Set WorldWindow canvas and credits overlay as child nodes of our container.
+        container.appendChild(wwd.canvas);
+        container.appendChild(creditsOverlay);
     });
