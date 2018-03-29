@@ -55,7 +55,7 @@ requirejs(['./WorldWindShim',
         creditsOverlay.style.textAlign = "right";
         creditsOverlay.style.opacity = "0.75";
 
-        creditsOverlay.innerHTML = "<p>I'm a DOM string of text</br>with many lines</p>";
+        creditsOverlay.innerHTML = "<p>I'm a DOM text string</br>and I contain many lines</br>WebUI haiku</p>";
         creditsOverlay.innerHTML += "<p><a href=\"http://www.maps.bing.com\" target=\"_blank\">I'm a DOM link</a></p>";
         creditsOverlay.innerHTML +=
             "<p><a href=\"http://www.maps.bing.com\" target=\"_blank\">" +
