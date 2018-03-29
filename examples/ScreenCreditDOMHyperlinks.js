@@ -42,14 +42,13 @@ requirejs(['./WorldWindShim',
 
         // Create screen credits overlay via browser's DOM
         var canvasParentNode = wwd.canvas.parentNode;
-        //canvasParentNode.style.position = "relative";
+        //canvasParentNode.style.position = "relative"; // Concern: this changes the styling of an application element.
 
         // Create div that will contain screen credits and set its styling and contents
         var creditsOverlay = document.createElement("div");
 
-        creditsOverlay.style.position = "absolute";
-
         // Set overlay CSS styling
+        creditsOverlay.style.position = "absolute";
         creditsOverlay.style.right = "20px"; // Warning: These coordinates use as reference the border of the
         creditsOverlay.style.bottom = "30px";// Canvas container, NOT the canvas itself (i.e. they're application dependant).
         creditsOverlay.style.color = "LightGray";
