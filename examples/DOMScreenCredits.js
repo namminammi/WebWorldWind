@@ -45,19 +45,9 @@ requirejs(['./WorldWindShim',
 
         // Create screen credits overlay via browser's DOM.
 
-        // Create new parent node that will serve as the container of both the canvas and the overlay div.
-        var container = document.createElement("div");
-
-        // Attempting to make the new container layout identical to the WorldWindow canvas, with the intention
-        // of avoiding disruption of the application's HTML layout, whatever it may be.
-        container.style.height = wwd.canvas.style.height;
-        container.style.width = wwd.canvas.style.width;
-
-        // Setting container's position as required for the overlay.
-        container.style.position = "relative";
-
         // Create div that will contain screen credits.
         var creditsOverlay = document.createElement("div");
+        creditsOverlay.setAttribute("id", "creditsOverlay"); // Not required, but helpful in the developer tools.
 
         // Set overlay CSS styling in order to (mostly) imitate current screen credits implementation.
         creditsOverlay.style.position = "absolute"; // Required for the overlay to be positioned over the container.
@@ -83,6 +73,18 @@ requirejs(['./WorldWindShim',
                 "</a>" +
             "</p>"
         ;
+
+        // Create new parent node that will serve as the container of both the canvas and the overlay div.
+        var container = document.createElement("div");
+        container.setAttribute("id", "globeAndCreditsContainer");
+
+        // Attempting to make the new container layout identical to the WorldWindow canvas, with the intention
+        // of avoiding disruption of the application's HTML layout, whatever it may be.
+        container.style.height = wwd.canvas.style.height;
+        container.style.width = wwd.canvas.style.width;
+
+        // Setting container's position as required for the overlay.
+        container.style.position = "relative";
 
         // Replace application-defined canvas parent node with our new container, hopefully without messing
         // with the application's layout.
