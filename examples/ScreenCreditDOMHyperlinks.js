@@ -42,14 +42,22 @@ requirejs(['./WorldWindShim',
 
         // Create screen credits overlay via browser's DOM.
 
+        // Create new parent node that will serve as the container of both the canvas and the overlay div.
+        var container = document.createElement("div");
+        // Attempting to make the new container layout identical to the WorldWindow canvas:
+        container.style.height = wwd.canvas.style.height;
+        container.style.width = wwd.canvas.style.width;
+        // Setting container's position as required for the overlay
+        container.style.position = "relative";
+
         // Create div that will contain screen credits.
         var creditsOverlay = document.createElement("div");
 
         // Set overlay CSS styling
         creditsOverlay.style.position = "absolute";
-        creditsOverlay.style.right = "2.7%";
-        creditsOverlay.style.bottom = "4%";
-        creditsOverlay.style.color = "LightGray";
+        creditsOverlay.style.right = "5px";
+        creditsOverlay.style.bottom = "3%";
+        creditsOverlay.style.color = "DimGray";
         creditsOverlay.style.textAlign = "right";
         creditsOverlay.style.opacity = "0.75";
 
@@ -70,8 +78,12 @@ requirejs(['./WorldWindShim',
             "</p>"
         ;
 
-        // Append overlay as sibling of canvas element.
-        wwd.canvas.parentNode.appendChild(creditsOverlay);
+        // Replace application-defined canvas parent node with our new container
+        wwd.canvas.parentNode.replaceChild(container, wwd.canvas);
+        // Set WorldWindow canvas as child of our container
+        container.appendChild(wwd.canvas);
+        // Set credits overlay as sibling of the WorldWindow canvas
+        container.appendChild(creditsOverlay);
 
         // Create a layer manager for controlling layer visibility.
         var layerManager = new LayerManager(wwd);
