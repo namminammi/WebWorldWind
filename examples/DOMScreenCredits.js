@@ -51,8 +51,8 @@ requirejs(['./WorldWindShim',
 
         // Set overlay CSS styling in order to (mostly) imitate current screen credits implementation.
         creditsOverlay.style.position = "absolute"; // Required for the overlay to be positioned over the container.
-        creditsOverlay.style.right = "5px";
-        creditsOverlay.style.bottom = "3%";
+        creditsOverlay.style.right = "0%";
+        creditsOverlay.style.bottom = "0%";
         creditsOverlay.style.color = "DimGray";
         creditsOverlay.style.textAlign = "right";
         creditsOverlay.style.opacity = "0.75";
@@ -82,6 +82,7 @@ requirejs(['./WorldWindShim',
         // of avoiding disruption of the application's HTML layout, whatever it may be.
         container.style.height = wwd.canvas.style.height;
         container.style.width = wwd.canvas.style.width;
+        container.style.display = "inline-flex";
 
         // Setting container's position as required for the overlay.
         container.style.position = "relative";
