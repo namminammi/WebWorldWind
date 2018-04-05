@@ -76,7 +76,7 @@ requirejs(['./WorldWindShim',
 
         // Create new parent node that will serve as the container of both the canvas and the overlay div.
         var container = document.createElement("div");
-        container.setAttribute("id", "globeAndCreditsContainer");
+        container.setAttribute("id", "WorldWindContainer");
 
         // Attempting to make the new container layout identical to the WorldWindow canvas, with the intention
         // of avoiding disruption of the application's HTML layout, whatever it may be.
