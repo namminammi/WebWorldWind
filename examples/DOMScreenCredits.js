@@ -74,24 +74,10 @@ requirejs(['./WorldWindShim',
             "</p>"
         ;
 
-        // Create new parent node that will serve as the container of both the canvas and the overlay div.
-        var container = document.createElement("div");
-        container.setAttribute("id", "WorldWindContainer");
+        // Since the overlay is going to be aligned relative to the Canvas parent, we have to compute the offsets
+        // between the Canvas and its parent node.
+        creditsOverlay.style.right = String(wwd.canvas.offsetLeft) + "px";
+        creditsOverlay.style.bottom = String(wwd.canvas.parentNode.offsetHeight - wwd.canvas.offsetHeight) + "px";
 
-        // Attempting to make the new container layout identical to the WorldWindow canvas, with the intention
-        // of avoiding disruption of the application's HTML layout, whatever it may be.
-        container.style.height = wwd.canvas.style.height;
-        container.style.width = wwd.canvas.style.width;
-        container.style.display = "inline-flex";
-
-        // Setting container's position as required for the overlay.
-        container.style.position = "relative";
-
-        // Replace application-defined canvas parent node with our new container, hopefully without messing
-        // with the application's layout.
-        wwd.canvas.parentNode.replaceChild(container, wwd.canvas);
-
-        // Set WorldWindow canvas and credits overlay as child nodes of our container.
-        container.appendChild(wwd.canvas);
-        container.appendChild(creditsOverlay);
+        wwd.canvas.parentNode.appendChild(creditsOverlay);
     });
