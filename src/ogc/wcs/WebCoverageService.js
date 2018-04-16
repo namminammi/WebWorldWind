@@ -73,6 +73,10 @@ define([
             this.describeCoverageDocuments = {};
         };
 
+        WebCoverageService.defaultImageWidth = 256;
+
+        WebCoverageService.defaultImageHeight = 256;
+
         /**
          * Connects to the Web Coverage Service specified in the constructor. This function handles version negotiation
          * and capabilities document retrieval. The return is a Promise which returns the initialized
@@ -177,7 +181,7 @@ define([
                     coverageId = coverageDescription.coverages[j].name || coverageDescription.coverages[j].coverageId;
                     this.describeCoverageDocuments[coverageId] = coverageDescription;
                     // temporary, will be replaced by a formal WcsCoverage object
-                    this.coverages.push(coverageDescription.coverages[j]);
+                    this.coverages.push(new WcsCoverage(coverageId, this.getCapabilitiesDocument, coverageDescription));
                 }
             }
 

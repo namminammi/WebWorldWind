@@ -19,13 +19,11 @@
 define([
         '../../error/ArgumentError',
         '../../util/Logger',
-        '../../ogc/wcs/WcsCapabilities',
-        '../../ogc/wcs/WcsDescribeCoverage'
+        '../../geom/Sector'
     ],
     function (ArgumentError,
               Logger,
-              WcsCapabilities,
-              WcsDescribeCoverage) {
+              Sector) {
         "use strict";
 
         /**
@@ -38,11 +36,273 @@ define([
          */
         var WcsCoverage = function (coverageId, getCapabilities, describeCoverage) {
 
+            this.coverageId = coverageId;
+
+            this.getCapabilities = getCapabilities;
+
+            this.describeCoverage = describeCoverage;
+
+            this.boundingBox = this.determineBoundingBox();
+
+            this.minSamplesPerRadian = this.calculateSamplesPerRadian();
+
             /**
              * A simple configuration object with the required parameters for ElevationCoverage.
              * @type {Object}
              */
-            this.elevationConfig = {};
+            this.elevationConfig = this.createElevationConfiguration();
+        };
+
+        WcsCoverage.prototype.determineBoundingBox = function () {
+            var idx, lowerCorner, upperCorner, srs, latFirst, labels, sector;
+
+            if (this.getCapabilities.version === "1.0.0") {
+                idx = WcsCoverage.indexOf(this.getCapabilities.coverages, "name", this.coverageId);
+                if (idx < 0) {
+                    // TODO error
+                    return null;
+                }
+
+                lowerCorner = this.getCapabilities.coverages[idx].wgs84BoundingBox.lowerCorner.split(/\s+/);
+                upperCorner = this.getCapabilities.coverages[idx].wgs84BoundingBox.upperCorner.split(/\s+/);
+
+                return new Sector(
+                    parseFloat(lowerCorner[1]),
+                    parseFloat(upperCorner[1]),
+                    parseFloat(lowerCorner[0]),
+                    parseFloat(upperCorner[0])
+                );
+            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "coverageId", this.coverageId);
+                if (idx < 0) {
+                    // TODO error
+                    return null;
+                }
+
+                // Attempt to use optionally provided WGS84 bounding box
+                if (this.getCapabilities.coverages[idx].wgs84BoundingBox) {
+                    sector = this.getCapabilities.coverages[idx].wgs84BoundingBox.getSector();
+                    if (sector) {
+                        return sector;
+                    }
+                }
+
+                srs = this.describeCoverage.coverages[idx].boundedBy.envelope.srsName.toUpperCase();
+                if ((srs.indexOf("4326") < 0) && (srs.indexOf("CRS84") < 0)) {
+                    // TODO error
+                    return null;
+                }
+
+                lowerCorner = this.describeCoverage.coverages[idx].boundedBy.envelope.lower;
+                upperCorner = this.describeCoverage.coverages[idx].boundedBy.envelope.upper;
+
+                labels = this.describeCoverage.coverages[idx].boundedBy.envelope.axisLabels;
+                if (labels[0].toUpperCase() === "LAT") {
+                    return new Sector(
+                        lowerCorner[0],
+                        upperCorner[0],
+                        lowerCorner[1],
+                        upperCorner[1]
+                    );
+                } else {
+                    return new Sector(
+                        lowerCorner[1],
+                        upperCorner[1],
+                        lowerCorner[0],
+                        lowerCorner[0]
+                    );
+                }
+            }
+        };
+
+        WcsCoverage.prototype.calculateSamplesPerRadian = function () {
+            var boundingBox = this.boundingBox || this.determineBoundingBox(), xLow, yLow, xHigh, yHigh, xRes, yRes,
+                idx;
+
+            if (!boundingBox) {
+                // TODO log error
+                return null;
+            }
+
+            if (this.getCapabilities.version === "1.0.0") {
+                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "name", this.coverageId);
+
+                if (idx < 0) {
+                    // TODO throw error
+                    return null;
+                }
+
+                xLow = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.low[0]);
+                yLow = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.low[1]);
+                xHigh = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.high[0]);
+                yHigh = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.high[1]);
+
+                xRes = (xHigh - xLow) / (boundingBox.deltaLongitude() * Math.PI / 180);
+                yRes = (yHigh - yLow) / (boundingBox.deltaLatitude() * Math.PI / 180);
+
+                return Math.min(xRes, yRes);
+            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "coverageId", this.coverageId);
+
+                if (idx < 0) {
+                    // TODO throw error
+                    return null;
+                }
+
+
+                xLow = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.low[0];
+                yLow = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.low[1];
+                xHigh = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.high[0];
+                yHigh = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.high[1];
+
+                xRes = (xHigh - xLow) / (boundingBox.deltaLongitude() * Math.PI / 180);
+                yRes = (yHigh - yLow) / (boundingBox.deltaLatitude() * Math.PI / 180);
+
+                return Math.min(xRes, yRes);
+            }
+        };
+
+        // Internal use only
+        WcsCoverage.prototype.createElevationConfiguration = function () {
+            // check if this service is 2.0.x and supports the scaling extension
+            if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+                if (this.getCapabilities.serviceIdentification.profile
+                    .indexOf("http://www.opengis.net/spec/WCS_service-extension_scaling/1.0/conf/scaling") < 0) {
+                    Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCoverage", "createElevationConfiguration",
+                        "The web coverage service doesn't support the necessary scaling extension.");
+                    return null;
+                }
+            }
+
+            var baseUrl, urlBuilder, requestUrl, idx, crs, format;
+
+            var elevationConfig = {
+                name: this.coverageId,
+                boundingBox: this.boundingBox,
+                samplesPerRadian: this.samplesPerRadian
+            };
+
+            baseUrl = this.prepareBaseUrl(this.getCoverageUrl());
+
+            if (this.getCapabilities.version === "1.0.0") {
+                // Check for WGS84 or EPSG:4326 CRS
+                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "name", this.coverageId);
+                if (idx < 0) {
+                    // TODO log message
+                    return null;
+                }
+
+                for (var i = 0, len = this.describeCoverage.coverages[idx].supportedCrs.requests.length; i < len; i++) {
+                    crs = this.describeCoverage.coverages[idx].supportedCrs.requests[i];
+                    if (crs.indexOf("WGS84") >= 0 || crs.indexOf("4326") >= 0) {
+                        break;
+                    }
+                    crs = null;
+                }
+                if (!crs) {
+                    // TODO log message
+                    return null;
+                }
+
+                // determine preferred format
+                format = this.findPreferredFormat(this.describeCoverage.coverages[idx].supportedFormats.formats);
+                if (!format) {
+                    // TODO log message
+                    return null;
+                }
+
+                requestUrl = baseUrl;
+                requestUrl += "SERVICE=WCS";
+                requestUrl += "&REQUEST=GetCoverage";
+                requestUrl += "&VERSION=1.0.0";
+                requestUrl += "&COVERAGE=" + this.coverageId;
+                requestUrl += "&CRS=" + crs;
+                requestUrl += "&WIDTH=" + 256;
+                requestUrl += "&HEIGHT=" + 256;
+                requestUrl += "&FORMAT=" + format;
+
+                urlBuilder = function (formattedUrl) {
+                    var url = formattedUrl;
+
+                    return {
+                        urlForTile: function (tile) {
+                            url += "&BBOX=";
+                            url += tile.sector.minLongitude + ",";
+                            url += tile.sector.minLatitude + ",";
+                            url += tile.sector.maxLongitude + ",";
+                            url += tile.sector.maxLatitude;
+
+                            return encodeURI(url);
+                        }
+                    };
+                };
+
+                elevationConfig.urlBuilder = urlBuilder(requestUrl);
+            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+
+            }
+
+            return elevationConfig;
+        };
+
+        WcsCoverage.prototype.findPreferredFormat = function (formats) {
+            // preferred format goes: GeoTiff then tiff
+            var len = formats.length, format;
+
+            // check for geotiff first
+            for (var i = 0; i < len; i++) {
+                if (formats[i].toLowerCase().indexOf("geotiff") >= 0) {
+                    return formats[i];
+                }
+            }
+
+            // check for tiff second
+            for (var i = 0; i < len; i++) {
+                if (formats[i].toLowerCase().indexOf("tiff") >= 0) {
+                    return formats[i];
+                }
+            }
+
+            return null;
+        };
+
+        WcsCoverage.prototype.getCoverageUrl = function () {
+            if (this.getCapabilities.version === "1.0.0") {
+                return this.getCapabilities.capability.request.getCoverage.get;
+            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+                return this.getCapabilities.operationsMetadata.getOperationMetadataByName("GetCoverage").dcp[0].getMethods[0].url;
+            }
+        };
+
+        // Internal use only - copied from WmsUrlBuilder, is there a better place to centralize???
+        WcsCoverage.prototype.prepareBaseUrl = function (url) {
+            if (!url) {
+                throw new ArgumentError(
+                    Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCoverage", "prepareBaseUrl", "missingUrl"));
+            }
+
+            var index = url.indexOf("?");
+
+            if (index < 0) { // if string contains no question mark
+                url = url + "?"; // add one
+            } else if (index !== url.length - 1) { // else if question mark not at end of string
+                index = url.search(/&$/);
+                if (index < 0) {
+                    url = url + "&"; // add a parameter separator
+                }
+            }
+
+            return url;
+        };
+
+        WcsCoverage.indexOf = function(array, propertyName, name) {
+            for (var i = 0, len = array.length; i < len; i++) {
+                if (array[i][propertyName] === name) {
+                    return i;
+                }
+            }
+
+            return -1;
         };
 
         return WcsCoverage;
