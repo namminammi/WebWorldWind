@@ -176,7 +176,7 @@ define([
                 }
             }
 
-            var baseUrl, urlBuilder, requestUrl, idx, crs, format;
+            var baseUrl, urlBuilder, requestUrl, idx, crs, format, subsetXLabel, subsetYLabel, axisXLabel, axisYLabel;
 
             var elevationConfig = {
                 name: this.coverageId,
@@ -241,7 +241,58 @@ define([
 
                 elevationConfig.urlBuilder = urlBuilder(requestUrl);
             } else if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
+                // Check for WGS84 or EPSG:4326 CRS
+                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "coverageId", this.coverageId);
+                if (idx < 0) {
+                    // TODO log message
+                    return null;
+                }
 
+                // TODO WCS 2.0.1 uses the CRS defined in the Envelope for sub-setting coverages, should we check to make sure the coverage uses EPSG:4326 or CRS84???
+
+                // determine preferred format
+                format = this.findPreferredFormat(this.capabilities.serviceMetadata.formatsSupported);
+                if (!format) {
+                    // TODO log message
+                    return null;
+                }
+
+                // determine the subset coordinate system labels
+                subsetXLabel = this.describeCoverage.coverages[idx].boundedBy.envelope.axisLabels[0];
+                subsetYLabel = this.describeCoverage.coverages[idx].boundedBy.envelope.axisLabels[1];
+
+                // determine the scaling coordinate system labels
+                axisXLabel = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.axisLabels[0];
+                axisYLabel = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.axisLabels[1];
+
+                requestUrl = baseUrl;
+                requestUrl += "SERVICE=WCS";
+                requestUrl += "&REQUEST=GetCoverage";
+                requestUrl += "&VERSION=" + this.capabilities.version;
+                requestUrl += "&COVERAGEID=" + this.coverageId;
+                requestUrl += "&FORMAT=" + format;
+                requestUrl += "&SCALESIZE=" + axisXLabel + "(256)," + axisYLabel + "(256)";
+                requestUrl += "&OVERVIEWPOLICY=NEAREST";
+
+                urlBuilder = function (formattedUrl, subsetXLabel, subsetYLabel) {
+                    var url = formattedUrl;
+                    var x = subsetXLabel;
+                    var y = subsetYLabel;
+                    return {
+                        urlForTile: function (tile) {
+                            url += "&SUBSET=" + x + "(";
+                            url += tile.sector.minLatitude + ",";
+                            url += tile.sector.maxLatitude + ")";
+                            url += "&SUBSET=" + y + "(";
+                            url += tile.sector.minLongitude + ",";
+                            url += tile.sector.maxLongitude + ")";
+
+                            return encodeURI(url);
+                        }
+                    };
+                };
+
+                elevationConfig.urlBuilder = urlBuilder(requestUrl, subsetXLabel, subsetYLabel);
             }
 
             return elevationConfig;
