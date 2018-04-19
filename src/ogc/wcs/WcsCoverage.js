@@ -30,15 +30,15 @@ define([
          * A Web Coverage Service version agnostic simple object representation of a coverage. Provides utility methods
          * for common WCS Coverage operations.
          * @param coverageId the name or id of the coverage
-         * @param getCapabilities the WcsCapabilities object representing the capabilities of this coverage
+         * @param capabilities the WcsCapabilities object representing the capabilities of this coverage
          * @param describeCoverage the WcsDescribeCoverage object representing the additional parameters of the coverage
          * @constructor
          */
-        var WcsCoverage = function (coverageId, getCapabilities, describeCoverage) {
+        var WcsCoverage = function (coverageId, capabilities, describeCoverage) {
 
             this.coverageId = coverageId;
 
-            this.getCapabilities = getCapabilities;
+            this.capabilities = capabilities;
 
             this.describeCoverage = describeCoverage;
 
@@ -56,15 +56,15 @@ define([
         WcsCoverage.prototype.determineBoundingBox = function () {
             var idx, lowerCorner, upperCorner, srs, latFirst, labels, sector;
 
-            if (this.getCapabilities.version === "1.0.0") {
-                idx = WcsCoverage.indexOf(this.getCapabilities.coverages, "name", this.coverageId);
+            if (this.capabilities.version === "1.0.0") {
+                idx = WcsCoverage.indexOf(this.capabilities.coverages, "name", this.coverageId);
                 if (idx < 0) {
                     // TODO error
                     return null;
                 }
 
-                lowerCorner = this.getCapabilities.coverages[idx].wgs84BoundingBox.lowerCorner.split(/\s+/);
-                upperCorner = this.getCapabilities.coverages[idx].wgs84BoundingBox.upperCorner.split(/\s+/);
+                lowerCorner = this.capabilities.coverages[idx].wgs84BoundingBox.lowerCorner.split(/\s+/);
+                upperCorner = this.capabilities.coverages[idx].wgs84BoundingBox.upperCorner.split(/\s+/);
 
                 return new Sector(
                     parseFloat(lowerCorner[1]),
@@ -72,7 +72,7 @@ define([
                     parseFloat(lowerCorner[0]),
                     parseFloat(upperCorner[0])
                 );
-            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+            } else if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
                 idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "coverageId", this.coverageId);
                 if (idx < 0) {
                     // TODO error
@@ -80,8 +80,8 @@ define([
                 }
 
                 // Attempt to use optionally provided WGS84 bounding box
-                if (this.getCapabilities.coverages[idx].wgs84BoundingBox) {
-                    sector = this.getCapabilities.coverages[idx].wgs84BoundingBox.getSector();
+                if (this.capabilities.coverages[idx].wgs84BoundingBox) {
+                    sector = this.capabilities.coverages[idx].wgs84BoundingBox.getSector();
                     if (sector) {
                         return sector;
                     }
@@ -124,7 +124,7 @@ define([
                 return null;
             }
 
-            if (this.getCapabilities.version === "1.0.0") {
+            if (this.capabilities.version === "1.0.0") {
                 idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "name", this.coverageId);
 
                 if (idx < 0) {
@@ -141,7 +141,7 @@ define([
                 yRes = (yHigh - yLow) / (boundingBox.deltaLatitude() * Math.PI / 180);
 
                 return Math.min(xRes, yRes);
-            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+            } else if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
                 idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "coverageId", this.coverageId);
 
                 if (idx < 0) {
@@ -165,8 +165,8 @@ define([
         // Internal use only
         WcsCoverage.prototype.createElevationConfiguration = function () {
             // check if this service is 2.0.x and supports the scaling extension
-            if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
-                if (this.getCapabilities.serviceIdentification.profile
+            if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
+                if (this.capabilities.serviceIdentification.profile
                     .indexOf("http://www.opengis.net/spec/WCS_service-extension_scaling/1.0/conf/scaling") < 0) {
                     Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCoverage", "createElevationConfiguration",
                         "The web coverage service doesn't support the necessary scaling extension.");
@@ -184,7 +184,7 @@ define([
 
             baseUrl = this.prepareBaseUrl(this.getCoverageUrl());
 
-            if (this.getCapabilities.version === "1.0.0") {
+            if (this.capabilities.version === "1.0.0") {
                 // Check for WGS84 or EPSG:4326 CRS
                 idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "name", this.coverageId);
                 if (idx < 0) {
@@ -238,7 +238,7 @@ define([
                 };
 
                 elevationConfig.urlBuilder = urlBuilder(requestUrl);
-            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
+            } else if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
 
             }
 
@@ -267,10 +267,10 @@ define([
         };
 
         WcsCoverage.prototype.getCoverageUrl = function () {
-            if (this.getCapabilities.version === "1.0.0") {
-                return this.getCapabilities.capability.request.getCoverage.get;
-            } else if (this.getCapabilities.version === "2.0.0" || this.getCapabilities.version === "2.0.1") {
-                return this.getCapabilities.operationsMetadata.getOperationMetadataByName("GetCoverage").dcp[0].getMethods[0].url;
+            if (this.capabilities.version === "1.0.0") {
+                return this.capabilities.capability.request.getCoverage.get;
+            } else if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
+                return this.capabilities.operationsMetadata.getOperationMetadataByName("GetCoverage").dcp[0].getMethods[0].url;
             }
         };
 
