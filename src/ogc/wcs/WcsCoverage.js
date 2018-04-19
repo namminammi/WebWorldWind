@@ -27,8 +27,8 @@ define([
         "use strict";
 
         /**
-         * A Web Coverage Service version agnostic simple object representation of a coverage. Provides utility methods
-         * for common WCS Coverage operations.
+         * A simple object representation of a Web Coverage Service coverage. Provides utility methods and properties
+         * for use in common WCS Coverage operations.
          * @param coverageId the name or id of the coverage
          * @param capabilities the WcsCapabilities object representing the capabilities of this coverage
          * @param describeCoverage the WcsDescribeCoverage object representing the additional parameters of the coverage
@@ -53,6 +53,7 @@ define([
             this.elevationConfig = this.createElevationConfiguration();
         };
 
+        // Internal use only
         WcsCoverage.prototype.determineBoundingBox = function () {
             var idx, lowerCorner, upperCorner, srs, latFirst, labels, sector;
 
@@ -115,6 +116,7 @@ define([
             }
         };
 
+        // Internal use only
         WcsCoverage.prototype.calculateSamplesPerRadian = function () {
             var boundingBox = this.boundingBox || this.determineBoundingBox(), xLow, yLow, xHigh, yHigh, xRes, yRes,
                 idx;
@@ -245,6 +247,7 @@ define([
             return elevationConfig;
         };
 
+        // Internal use only
         WcsCoverage.prototype.findPreferredFormat = function (formats) {
             // preferred format goes: GeoTiff then tiff
             var len = formats.length, format;
@@ -266,6 +269,7 @@ define([
             return null;
         };
 
+        // Internal use only
         WcsCoverage.prototype.getCoverageUrl = function () {
             if (this.capabilities.version === "1.0.0") {
                 return this.capabilities.capability.request.getCoverage.get;
@@ -295,6 +299,7 @@ define([
             return url;
         };
 
+        // Internal use only
         WcsCoverage.indexOf = function(array, propertyName, name) {
             for (var i = 0, len = array.length; i < len; i++) {
                 if (array[i][propertyName] === name) {
