@@ -222,7 +222,7 @@ define([
             it("should have a get capabilities GET url of http://localhost:8080/geoserver/wcs?", function () {
                 var wcsCaps = new WcsCapabilities(xmlDom);
 
-                var getCapabilitiesUrl = wcsCaps.capability.request.getCapabilities.get;
+                var getCapabilitiesUrl = wcsCaps.capability.request.capabilities.get;
 
                 expect(getCapabilitiesUrl).toBe("http://localhost:8080/geoserver/wcs?");
             });
@@ -230,7 +230,7 @@ define([
             it("should have a get capabilities POST url of http://localhost:8080/geoserver/wcs?", function () {
                 var wcsCaps = new WcsCapabilities(xmlDom);
 
-                var getCapabilitiesUrl = wcsCaps.capability.request.getCapabilities.post;
+                var getCapabilitiesUrl = wcsCaps.capability.request.capabilities.post;
 
                 expect(getCapabilitiesUrl).toBe("http://localhost:8080/geoserver/wcs?");
             });
