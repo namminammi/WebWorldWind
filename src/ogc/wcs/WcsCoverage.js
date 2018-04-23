@@ -227,12 +227,12 @@ define([
                     var url = formattedUrl;
 
                     return {
-                        urlForTile: function (tile) {
+                        urlForTile: function (sector) {
                             url += "&BBOX=";
-                            url += tile.sector.minLongitude + ",";
-                            url += tile.sector.minLatitude + ",";
-                            url += tile.sector.maxLongitude + ",";
-                            url += tile.sector.maxLatitude;
+                            url += sector.minLongitude + ",";
+                            url += sector.minLatitude + ",";
+                            url += sector.maxLongitude + ",";
+                            url += sector.maxLatitude;
 
                             return encodeURI(url);
                         }
@@ -279,13 +279,13 @@ define([
                     var x = subsetXLabel;
                     var y = subsetYLabel;
                     return {
-                        urlForTile: function (tile) {
+                        urlForTile: function (sector) {
                             url += "&SUBSET=" + x + "(";
-                            url += tile.sector.minLatitude + ",";
-                            url += tile.sector.maxLatitude + ")";
+                            url += sector.minLatitude + ",";
+                            url += sector.maxLatitude + ")";
                             url += "&SUBSET=" + y + "(";
-                            url += tile.sector.minLongitude + ",";
-                            url += tile.sector.maxLongitude + ")";
+                            url += sector.minLongitude + ",";
+                            url += sector.maxLongitude + ")";
 
                             return encodeURI(url);
                         }
@@ -294,6 +294,10 @@ define([
 
                 elevationConfig.urlBuilder = urlBuilder(requestUrl, subsetXLabel, subsetYLabel);
             }
+
+            elevationConfig.samplesPerRadian = this.samplesPerRadian;
+            elevationConfig.boundingBox = this.boundingBox;
+            elevationConfig.coverageId = this.coverageId;
 
             return elevationConfig;
         };

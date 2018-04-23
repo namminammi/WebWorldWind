@@ -22,14 +22,14 @@ define([
     '../../util/Promise',
     '../../ogc/wcs/WcsCapabilities',
     '../../ogc/wcs/WcsCoverage',
-    '../../ogc/wcs/WcsDescribeCoverage'
+    '../../ogc/wcs/WcsCoverageDescriptions'
     ],
     function (ArgumentError,
               Logger,
               Promise,
               WcsCapabilities,
               WcsCoverage,
-              WcsDescribeCoverage) {
+              WcsCoverageDescriptions) {
         "use strict";
 
         /**
@@ -60,7 +60,7 @@ define([
 
             /**
              * A map of the coverages to their corresponding DescribeCoverage documents.
-             * @type {WcsDescribeCoverage}
+             * @type {WcsCoverageDescriptions}
              */
             this.coverageDescriptions = null;
         };
@@ -141,11 +141,12 @@ define([
 
         // Internal use only
         WebCoverageService.prototype.parseCoverages = function (xmlDom) {
-            this.coverageDescriptions = new WcsDescribeCoverage(xmlDom);
-            var coverageCount = this.coverageDescriptions.coverages.length;
+            this.coverageDescriptions = new WcsCoverageDescriptions(xmlDom);
+            var coverageCount = this.capabilities.coverages.length, coverageId;
 
             for (var i = 0; i < coverageCount; i++) {
-                this.coverages.push(this.coverageDescriptions.coverages[i]);
+                coverageId = this.capabilities.coverages[i].coverageId || this.capabilities.coverages[i].name;
+                this.coverages.push(new WcsCoverage(coverageId, this.capabilities, this.coverageDescriptions));
             }
         };
 
