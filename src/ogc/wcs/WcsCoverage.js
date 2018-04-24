@@ -29,139 +29,50 @@ define([
         /**
          * A simple object representation of a Web Coverage Service coverage. Provides utility methods and properties
          * for use in common WCS Coverage operations.
-         * @param coverageId the name or id of the coverage
-         * @param capabilities the WcsCapabilities object representing the capabilities of this coverage
-         * @param describeCoverage the WcsDescribeCoverage object representing the additional parameters of the coverage
+         * @param {String} coverageId the name or id of the coverage
+         * @param {WebCoverageService} webCoverageService the WebCoverageService providing the coverage
          * @constructor
          */
-        var WcsCoverage = function (coverageId, capabilities, describeCoverage) {
+        var WcsCoverage = function (coverageId, webCoverageService) {
+            if (!coverageId) {
+                throw new ArgumentError(
+                    Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCoverage", "constructor",
+                        "The specified coverage id is null or undefined."));
+            }
 
+            if (!webCoverageService) {
+                throw new ArgumentError(
+                    Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCoverage", "constructor",
+                        "The specified WebCoverageService is null or undefined."));
+            }
+
+            /**
+             * The Web Coverage Service Coverages id or name as assigned by the providing service.
+             * @type {String}
+             */
             this.coverageId = coverageId;
 
-            this.capabilities = capabilities;
+            /**
+             * The WebCoverageService responsible for managing this Coveragea and Web Coverage Service.
+             * @type {WebCoverageService}
+             */
+            this.webCoverageService = webCoverageService;
 
-            this.describeCoverage = describeCoverage;
+            /**
+             * The Sector representing the bounds of the coverage.
+             */
+            this.sector = this.determineBoundingBox();
 
-            this.boundingBox = this.determineBoundingBox();
-
-            this.minSamplesPerRadian = this.calculateSamplesPerRadian();
+            /**
+             * The resolution of the coverage, in degrees.
+             */
+            this.resolution = this.calculateSamplesPerRadian();
 
             /**
              * A simple configuration object with the required parameters for ElevationCoverage.
              * @type {Object}
              */
             this.elevationConfig = this.createElevationConfiguration();
-        };
-
-        // Internal use only
-        WcsCoverage.prototype.determineBoundingBox = function () {
-            var idx, lowerCorner, upperCorner, srs, latFirst, labels, sector;
-
-            if (this.capabilities.version === "1.0.0") {
-                idx = WcsCoverage.indexOf(this.capabilities.coverages, "name", this.coverageId);
-                if (idx < 0) {
-                    // TODO error
-                    return null;
-                }
-
-                lowerCorner = this.capabilities.coverages[idx].wgs84BoundingBox.lowerCorner.split(/\s+/);
-                upperCorner = this.capabilities.coverages[idx].wgs84BoundingBox.upperCorner.split(/\s+/);
-
-                return new Sector(
-                    parseFloat(lowerCorner[1]),
-                    parseFloat(upperCorner[1]),
-                    parseFloat(lowerCorner[0]),
-                    parseFloat(upperCorner[0])
-                );
-            } else if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
-                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "coverageId", this.coverageId);
-                if (idx < 0) {
-                    // TODO error
-                    return null;
-                }
-
-                // Attempt to use optionally provided WGS84 bounding box
-                if (this.capabilities.coverages[idx].wgs84BoundingBox) {
-                    sector = this.capabilities.coverages[idx].wgs84BoundingBox.getSector();
-                    if (sector) {
-                        return sector;
-                    }
-                }
-
-                srs = this.describeCoverage.coverages[idx].boundedBy.envelope.srsName.toUpperCase();
-                if ((srs.indexOf("4326") < 0) && (srs.indexOf("CRS84") < 0)) {
-                    // TODO error
-                    return null;
-                }
-
-                lowerCorner = this.describeCoverage.coverages[idx].boundedBy.envelope.lower;
-                upperCorner = this.describeCoverage.coverages[idx].boundedBy.envelope.upper;
-
-                labels = this.describeCoverage.coverages[idx].boundedBy.envelope.axisLabels;
-                if (labels[0].toUpperCase() === "LAT") {
-                    return new Sector(
-                        lowerCorner[0],
-                        upperCorner[0],
-                        lowerCorner[1],
-                        upperCorner[1]
-                    );
-                } else {
-                    return new Sector(
-                        lowerCorner[1],
-                        upperCorner[1],
-                        lowerCorner[0],
-                        lowerCorner[0]
-                    );
-                }
-            }
-        };
-
-        // Internal use only
-        WcsCoverage.prototype.calculateSamplesPerRadian = function () {
-            var boundingBox = this.boundingBox || this.determineBoundingBox(), xLow, yLow, xHigh, yHigh, xRes, yRes,
-                idx;
-
-            if (!boundingBox) {
-                // TODO log error
-                return null;
-            }
-
-            if (this.capabilities.version === "1.0.0") {
-                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "name", this.coverageId);
-
-                if (idx < 0) {
-                    // TODO throw error
-                    return null;
-                }
-
-                xLow = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.low[0]);
-                yLow = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.low[1]);
-                xHigh = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.high[0]);
-                yHigh = parseFloat(this.describeCoverage.coverages[idx].domainSet.spatialDomain.rectifiedGrid.limits.high[1]);
-
-                xRes = (xHigh - xLow) / (boundingBox.deltaLongitude() * Math.PI / 180);
-                yRes = (yHigh - yLow) / (boundingBox.deltaLatitude() * Math.PI / 180);
-
-                return Math.min(xRes, yRes);
-            } else if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
-                idx = WcsCoverage.indexOf(this.describeCoverage.coverages, "coverageId", this.coverageId);
-
-                if (idx < 0) {
-                    // TODO throw error
-                    return null;
-                }
-
-
-                xLow = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.low[0];
-                yLow = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.low[1];
-                xHigh = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.high[0];
-                yHigh = this.describeCoverage.coverages[idx].domainSet.rectifiedGrid.limits.high[1];
-
-                xRes = (xHigh - xLow) / (boundingBox.deltaLongitude() * Math.PI / 180);
-                yRes = (yHigh - yLow) / (boundingBox.deltaLatitude() * Math.PI / 180);
-
-                return Math.min(xRes, yRes);
-            }
         };
 
         // Internal use only
