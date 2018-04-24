@@ -58,7 +58,35 @@ define([
              */
             this.xmlDom = xmlDom;
 
+            /**
+             * Maps the coverageId or name to the index within the coverages array.
+             * @type {{}}
+             */
+            this.coverageMap = {};
+
             this.assembleDocument();
+        };
+
+        /**
+         * Returns the GetCoverage base url as detailed in the capabilities document
+         * @param coverageId the coverage id or name
+         */
+        WcsCapabilities.prototype.getCoverageBaseUrl = function (coverageId) {
+            if (!this.coverageMap.hasOwnProperty(coverageId)) {
+                throw new ArgumentError(
+                    Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCapabilities", "getCoverageBaseUrl",
+                        "The specified coverage id was null or not defined."));
+            }
+
+            var idx = this.coverageMap[coverageId];
+
+            if (this.version === "1.0.0") {
+                return this.capability.request.getCoverage.get
+            } else if (this.version === "2.0.1" || this.version === "2.0.0") {
+                return this.operationsMetadata.getOperationMetadataByName("GetCoverage").dcp[0].getMethods[0].url
+            }
+
+            return null;
         };
 
         // Internal. Intentionally not documented.
@@ -125,6 +153,7 @@ define([
                 if (child.localName === "CoverageOfferingBrief") {
                     this.coverages = this.coverages || [];
                     this.coverages.push(this.assembleCoverages100(child));
+                    this.addCoverageToMap();
                 }
             }
         };
@@ -139,6 +168,7 @@ define([
                     this.assembleDatasetAugment20x(child, coverage);
                     this.coverages = this.coverages || [];
                     this.coverages.push(coverage);
+                    this.addCoverageToMap();
                 }
             }
         };
@@ -332,6 +362,14 @@ define([
             }
 
             return extension;
+        };
+
+        // Internal. Intentionally not documented.
+        WcsCapabilities.prototype.addCoverageToMap = function () {
+            var idx = this.coverages.length - 1,
+                coverageId = this.coverages[idx].coverageId || this.coverages[idx].name;
+
+            this.coverageMap[coverageId] = idx;
         };
 
         return WcsCapabilities;

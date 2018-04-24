@@ -72,6 +72,16 @@ define([
 
                 expect(actualResolution).toBeCloseTo(expectedResolution, 6);
             });
+
+            it("should provide the request/response crs", function () {
+                var wcsCoverageDescriptions = new WcsCoverageDescriptions(xmlDom);
+                var expectedCrs = ["EPSG:4326"];
+
+                var supportedCrs = wcsCoverageDescriptions.getSupportedCrs("testing:gebco");
+
+                expect(supportedCrs.length).toBe(expectedCrs.length);
+                expect(supportedCrs[0]).toBe(expectedCrs[0]);
+            });
         });
 
         it("should match the coverage name testing:gebco", function () {
@@ -343,6 +353,16 @@ define([
                 var actualResolution = wcsCoverageDescriptions.getResolution("testing__gebco");
 
                 expect(actualResolution).toBeCloseTo(expectedResolution, 6);
+            });
+
+            it("should provide the request/response crs", function () {
+                var wcsCoverageDescriptions = new WcsCoverageDescriptions(xmlDom);
+                var expectedCrs = ["http://www.opengis.net/def/crs/EPSG/0/4326"];
+
+                var supportedCrs = wcsCoverageDescriptions.getSupportedCrs("testing__gebco");
+
+                expect(supportedCrs.length).toBe(expectedCrs.length);
+                expect(supportedCrs[0]).toBe(expectedCrs[0]);
             });
         });
 

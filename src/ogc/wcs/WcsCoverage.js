@@ -61,25 +61,19 @@ define([
             /**
              * The Sector representing the bounds of the coverage.
              */
-            this.sector = this.determineBoundingBox();
+            this.sector = this.webCoverageService.coverageDescriptions.getSector(this.coverageId);
 
             /**
              * The resolution of the coverage, in degrees.
              */
-            this.resolution = this.calculateSamplesPerRadian();
-
-            /**
-             * A simple configuration object with the required parameters for ElevationCoverage.
-             * @type {Object}
-             */
-            this.elevationConfig = this.createElevationConfiguration();
+            this.resolution = this.webCoverageService.coverageDescriptions.getResolution(this.coverageId);
         };
 
         // Internal use only
         WcsCoverage.prototype.createElevationConfiguration = function () {
             // check if this service is 2.0.x and supports the scaling extension
-            if (this.capabilities.version === "2.0.0" || this.capabilities.version === "2.0.1") {
-                if (this.capabilities.serviceIdentification.profile
+            if (this.webCoverageService.capabilities.version === "2.0.0" || this.webCoverageService.capabilities.version === "2.0.1") {
+                if (this.webCoverageService.capabilities.serviceIdentification.profile
                     .indexOf("http://www.opengis.net/spec/WCS_service-extension_scaling/1.0/conf/scaling") < 0) {
                     Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCoverage", "createElevationConfiguration",
                         "The web coverage service doesn't support the necessary scaling extension.");

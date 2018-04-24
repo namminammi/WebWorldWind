@@ -96,7 +96,7 @@ define([
             return service.retrieveCapabilities()
                 .then(function (wcsCapabilities) {
                     service.capabilities = wcsCapabilities;
-                    return service.describeCoverages(wcsCapabilities);
+                    return service.describeCoverages();
                 })
                 .then(function (coverages) {
                     service.parseCoverages(coverages);
@@ -146,7 +146,7 @@ define([
 
             for (var i = 0; i < coverageCount; i++) {
                 coverageId = this.capabilities.coverages[i].coverageId || this.capabilities.coverages[i].name;
-                this.coverages.push(new WcsCoverage(coverageId, this.capabilities, this.coverageDescriptions));
+                this.coverages.push(new WcsCoverage(coverageId, this));
             }
         };
 

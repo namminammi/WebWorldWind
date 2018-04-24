@@ -134,6 +134,29 @@ define([
             return Math.max(xRes, yRes);
         };
 
+        /**
+         * Returns an array of the supported coordinates reference systems for the provided coverage.
+         * @param coverageId the coverage id or name
+         */
+        WcsCoverageDescriptions.prototype.getSupportedCrs = function (coverageId) {
+            if (!this.coverageMap.hasOwnProperty(coverageId)) {
+                throw new ArgumentError(
+                    Logger.logMessage(Logger.LEVEL_SEVERE, "WcsCoverageDescriptions", "getSupportedCrs",
+                        "The specified coverage id was null or not defined."));
+            }
+
+            var idx = this.coverageMap[coverageId], crses = [];
+
+            if (this.version === "1.0.0") {
+                return this.coverages[0].supportedCrs.requests;
+            } else if (this.version === "2.0.1" || this.version === "2.0.0") {
+                crses.push(this.coverages[0].boundedBy.envelope.srsName);
+                return crses;
+            }
+
+            return null;
+        };
+
         // Internal. Intentionally not documented.
         WcsCoverageDescriptions.prototype.assembleDocument = function () {
             // Determine version and update sequence
