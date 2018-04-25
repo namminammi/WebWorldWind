@@ -30,8 +30,6 @@ define([
              WebCoverageService) {
     "use strict";
 
-
-
     describe("1.0.0 WCS Url Builder", function () {
 
         var webCoverageService;
@@ -92,6 +90,75 @@ define([
                 "1.0.0&COVERAGE=testing:pacificnw_usgs_ned_10m&CRS=EPSG:4326&WIDTH=256&HEIGHT=256&FORMAT=GeoTIFF&" +
                 "BBOX=" + mockSector.minLongitude + "," + mockSector.minLatitude + "," + mockSector.maxLongitude +
                  "," + mockSector.maxLatitude);
+            var wcsUrlBuilder = new WcsUrlBuilder(coverage);
+
+            var coverageUrl = wcsUrlBuilder.urlForTile(mockTile, "na");
+
+            expect(coverageUrl).toBe(expectedUrl);
+        });
+    });
+
+    describe("2.0.1 WCS Url Builder", function () {
+
+        var webCoverageService;
+
+        beforeAll(function (done) {
+
+            WebCoverageService.prototype.retrieveCapabilities = function () {
+                return new Promise(function (resolve, reject) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", "../base/test/ogc/wcs/wcs201GetCapabilities.xml", true);
+                    xhr.addEventListener('load', function () {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                resolve(new WcsCapabilities(xhr.responseXML));
+                            } else {
+                                reject("failure");
+                            }
+                        }
+                    });
+                    xhr.send(null);
+                });
+            };
+
+            WebCoverageService.prototype.describeCoverages = function () {
+                return new Promise(function (resolve, reject) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", "../base/test/ogc/wcs/wcs201DescribeCoverage.xml", true);
+                    xhr.addEventListener('load', function () {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                resolve(xhr.responseXML);
+                            } else {
+                                reject("failure");
+                            }
+                        }
+                    });
+                    xhr.send(null);
+                });
+            };
+
+            WebCoverageService.create("not real")
+                .then(function (wcs) {
+                    webCoverageService = wcs;
+                    done();
+                })
+                .catch(function (e) {
+                    fail(e);
+                });
+        });
+
+        it ("should generate the appropriate url GetCoverage request", function () {
+            //sector, levelZeroDelta, numLevels, tileWidth, tileHeight
+            var mockLevelSet = new LevelSet(Sector.FULL_SPHERE, 90, 5, 256, 256);
+            var mockSector = new Sector(22.5, 45, -90, -67.5);
+            var mockTile = new Tile(mockSector, mockLevelSet.level(1), 3, 5);
+            var coverage = webCoverageService.coverages[1];
+            var expectedUrl = encodeURI("http://localhost:8080/geoserver/wcs?SERVICE=WCS&REQUEST=GetCoverage&VERSION=" +
+                "2.0.1&COVERAGEID=testing__pacificnw_usgs_ned_10m&FORMAT=image/tiff&SCALESIZE=i(256),j(256)" +
+                "&OVERVIEWPOLICY=NEAREST&SUBSET=Lat(" + mockSector.minLatitude + "," + mockSector.maxLatitude + ")" +
+                "&SUBSET=Long(" + mockSector.minLongitude + "," + mockSector.maxLongitude + ")");
+
             var wcsUrlBuilder = new WcsUrlBuilder(coverage);
 
             var coverageUrl = wcsUrlBuilder.urlForTile(mockTile, "na");

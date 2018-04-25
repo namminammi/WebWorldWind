@@ -93,9 +93,27 @@ define([
 
         WcsUrlBuilder.prototype.buildUrl20x = function (tile, requestUrl) {
             var format = this.findPreferredFormat() || "image/tiff";
+            var sector = tile.sector, latLabel, lonLabel;
+            var idx = this.wcsCoverage.webCoverageService.coverageDescriptions.coverageMap[this.wcsCoverage.coverageId];
+            var scaleLabels = this.wcsCoverage.webCoverageService.coverageDescriptions.coverages[idx].domainSet.rectifiedGrid.axisLabels;
+            var axisLabels = this.wcsCoverage.webCoverageService.coverageDescriptions.coverages[idx].boundedBy.envelope.axisLabels;
+            if (axisLabels[0].toLowerCase().indexOf("lat") >= 0) {
+                latLabel = axisLabels[0];
+                lonLabel = axisLabels[1];
+            } else {
+                latLabel = axisLabels[1];
+                lonLabel = axisLabels[0];
+            }
 
             requestUrl += "&VERSION=" + this.wcsCoverage.webCoverageService.capabilities.version;
-            // requestUrl +=
+            requestUrl += "&COVERAGEID=" + this.wcsCoverage.coverageId;
+            requestUrl += "&FORMAT=" + format;
+            requestUrl += "&SCALESIZE=" + scaleLabels[0] + "(" + WcsUrlBuilder.TILE_WIDTH + ")," + scaleLabels[1] + "(" + WcsUrlBuilder.TILE_HEIGHT + ")";
+            requestUrl += "&OVERVIEWPOLICY=NEAREST";
+            requestUrl += "&SUBSET=" + latLabel + "(" + sector.minLatitude + "," + sector.maxLatitude + ")";
+            requestUrl += "&SUBSET=" + lonLabel + "(" + sector.minLongitude + "," + sector.maxLongitude + ")";
+
+            return encodeURI(requestUrl);
         };
 
         WcsUrlBuilder.prototype.findPreferredFormat = function () {
